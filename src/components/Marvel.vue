@@ -1,12 +1,14 @@
 <template>
   <div class="marvel">
 
-    <div class="marvelImagBlock" v-if="marvelResponse !== null " >
-      <div class="imageParent" v-if="(character.thumbnail.path.includes('available') !== true )" v-for="(character, index) in marvelResponse" :key="index" @click="descriptCharacter(index)">
+    <div class="marvelImagBlock" v-if="characters.length !== 0" >
+      <div class="imageParent" v-for="(character, index) in characters" :key="index" @mousemove="descriptHidde(character.id)" @click="descriptShow(character.id)" >
         <img :src="character.thumbnail.path+'.'+character.thumbnail.extension" :alt="'Marvel Character : '+character.name">
-        <div class="descrip" >
+        <div class="hiddenDescript" :id="character.id">
           <p>{{character.name}}</p>
           <p>{{character.description}}</p>
+          <!-- <icon name="fa-thumbs-up"></icon> -->
+          <v-icon name="heart"></v-icon>
         </div>
       </div>
     </div>
@@ -26,19 +28,32 @@ export default {
   name: 'Marvel',
   components: {
     ApiRequest,
-    Spinner
+    Spinner,
+    "icon": require("vue-icons")
   },
   data () {
     return {
-      marvelResponse: null
+      characters: [],
+      limit: 20
     }
   },
-  created(){
-    ApiRequest.getcharacters().then( char => this.marvelResponse=char);
+  beforeCreate(){
+    ApiRequest.getcharacters().then( char => char.forEach(element => {
+      if((element.thumbnail.path.includes('available') !== true) && (this.characters.length < this.limit)){
+        this.characters.push(element)
+      }
+    })).catch((error) => console.error(error) )
   },
   methods: {
-    descriptCharacter(index){
-      console.log('ok '+index);
+    descriptShow(characterId){
+      console.log('show '+`#${characterId}`)
+      document.getElementById(characterId).classList.remove('hiddenDescript');
+      document.getElementById(characterId).classList.add('descript');
+    },
+    descriptHidde(characterId){
+      document.getElementById(characterId).classList.remove('descript');
+      document.getElementById(characterId).classList.add('hiddenDescript');
+      console.log('hidde '+`${characterId}`)
     }
   }
 }
@@ -72,16 +87,30 @@ img {
   display: block;
   width: 100%;
 }
-.descrip {
-  background-color: rgba(0, 0, 0, 0.3);
+.descript {
+  background-color: rgba(0, 0, 0, 0.8);
   color: #fff;
+  display: block;
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
 }
+.hiddenDescript {
+  display: none;
+  /* background-color: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%; */
+}
 p {
   padding: 0 1.8em;
+}
+svg {
+  width: 2em;
 }
 </style>
